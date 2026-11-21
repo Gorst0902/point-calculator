@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // ====== CHỈNH Ở ĐÂY ======
-const PLAYERS = ["An", "Tôn", "Thiện"];
+const STORAGE_KEY = "bida-state-v1";
+const DEFAULT_NAMES = ["An", "Tôn", "Thiện"];
 const STEP = 1; // mỗi lần bấm cộng/trừ bao nhiêu điểm
 
 type Rank = { title: string; emoji: string; card: string; emojiClass?: string };
@@ -42,22 +43,56 @@ function getRank(score: number, max: number, min: number): Rank {
 }
 
 export default function Home() {
-  const [scores, setScores] = useState<number[]>(PLAYERS.map(() => 0));
-
   const change = (i: number, delta: number) =>
     setScores((s) => s.map((v, idx) => (idx === i ? v + delta : v)));
+
+  const [names, setNames] = useState<string[]>(DEFAULT_NAMES);
+  const [scores, setScores] = useState<number[]>(DEFAULT_NAMES.map(() => 0));
+
+  const rename = (i: number, value: string) =>
+    setNames((n) => n.map((v, idx) => (idx === i ? value : v)));
 
   const max = Math.max(...scores);
   const min = Math.min(...scores);
 
+  const [loaded, setLoaded] = useState(false);
+
+  // Load saved data once, when the page opens
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        const ok =
+          Array.isArray(data.names) &&
+          Array.isArray(data.scores) &&
+          data.names.length === DEFAULT_NAMES.length &&
+          data.scores.length === DEFAULT_NAMES.length;
+        if (ok) {
+          setNames(data.names);
+          setScores(data.scores);
+        }
+      }
+    } catch {}
+    setLoaded(true);
+  }, []);
+
+  // Save every time names or scores change
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ names, scores }));
+    } catch {}
+  }, [names, scores, loaded]);
+
   return (
     <main className="mx-auto flex h-dvh max-w-md flex-col border-x-8 border-[#4a2a14] px-3.5 pt-[calc(env(safe-area-inset-top)+12px)] pb-[calc(env(safe-area-inset-bottom)+12px)]">
       <section className="flex min-h-0 flex-1 flex-col gap-2.5">
-        {PLAYERS.map((name, i) => {
+        {names.map((name, i) => {
           const rank = getRank(scores[i], max, min);
           return (
             <article
-              key={name}
+              key={i}
               className={`flex min-h-0 flex-1 flex-col rounded-3xl border-[3px] px-3.5 py-2.5 transition duration-300 ${rank.card}`}
             >
               {/* Tên + danh hiệu */}
@@ -67,10 +102,18 @@ export default function Home() {
                 >
                   {rank.emoji}
                 </span>
-                <div>
-                  <h2 className="text-2xl leading-none font-extrabold">
-                    {name}
-                  </h2>
+                <div className="min-w-0 flex-1">
+                  <input
+                    value={name}
+                    onChange={(e) => rename(i, e.target.value)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && e.currentTarget.blur()
+                    }
+                    maxLength={12}
+                    aria-label={`Tên người chơi ${i + 1}`}
+                    enterKeyHint="done"
+                    className="w-full min-w-0 border-b-2 border-dashed border-current/30 bg-transparent text-2xl leading-none font-extrabold outline-none focus:border-current/80"
+                  />
                   <strong className="text-[15px] font-bold">
                     {rank.title}
                   </strong>
