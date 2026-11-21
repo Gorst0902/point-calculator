@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 // ====== CHỈNH Ở ĐÂY ======
-const PLAYERS = ["An", "Tôn", "Tú"];
+const PLAYERS = ["An", "Tôn", "Thiện"];
 const STEP = 1; // mỗi lần bấm cộng/trừ bao nhiêu điểm
 
 type Rank = { title: string; emoji: string; card: string; emojiClass?: string };
