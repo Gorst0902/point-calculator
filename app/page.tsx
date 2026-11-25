@@ -10,7 +10,7 @@ const STEP = 1; // mỗi lần bấm cộng/trừ bao nhiêu điểm
 type Rank = { title: string; emoji: string; card: string; emojiClass?: string };
 
 // Mỗi hạng có 1 chuỗi class Tailwind cho màu thẻ -> sửa màu ngay tại đây
-const RANKS: Record<"top" | "mid" | "low" | "even", Rank> = {
+const RANKS: Record<"top" | "mid" | "zero" | "low" | "even", Rank> = {
   top: {
     title: "Phú ông",
     emoji: "👑",
@@ -20,6 +20,11 @@ const RANKS: Record<"top" | "mid" | "low" | "even", Rank> = {
     title: "Tiểu tư sản",
     emoji: "☕",
     card: "bg-linear-to-br from-[#e4f1f8] to-[#a9c7d8] text-[#17323f] border-white",
+  },
+  zero: {
+    title: "Vô sản",
+    emoji: "🛠️",
+    card: "bg-linear-to-br from-[#d5d9de] to-[#929ba5] text-[#1f2933] border-[#eceff2]",
   },
   low: {
     title: "Nô lệ",
@@ -39,6 +44,9 @@ function getRank(score: number, max: number, min: number): Rank {
   if (max === min) return RANKS.even;
   if (score === max) return RANKS.top;
   if (score === min) return RANKS.low;
+  // Người ở giữa: phụ thuộc vào điểm của chính họ
+  if (score < 0) return RANKS.low;
+  if (score === 0) return RANKS.zero;
   return RANKS.mid;
 }
 
